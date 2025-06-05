@@ -334,6 +334,7 @@ class DiskStorage final : public Storage {
   bool WriteEdgeToConnectivityIndex(Transaction *transaction, std::string_view vertex_gid, std::string_view edge_gid,
                                     rocksdb::ColumnFamilyHandle *handle, std::string mode);
   bool DeleteVertexFromDisk(Transaction *transaction, std::string_view vertex_gid, std::string_view vertex);
+  bool DeleteVertexFromDiskLeavingEdges(Transaction *transaction, std::string_view vertex_gid, std::string_view vertex);
   bool DeleteEdgeFromEdgeColumnFamily(Transaction *transaction, std::string_view edge_gid);
   bool DeleteEdgeFromDisk(Transaction *transaction, std::string_view edge_gid, std::string_view src_vertex_gid,
                           std::string_view dst_vertex_gid);

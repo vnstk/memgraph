@@ -1133,6 +1133,18 @@ bool DiskStorage::WriteEdgeToConnectivityIndex(Transaction *transaction, std::st
   return false;
 }
 
+bool DiskStorage::DeleteVertexFromDiskLeavingEdges(Transaction *transaction, std::string_view vertex_gid,
+                                                   std::string_view vertex) {
+  auto vertex_del_status = transaction->disk_transaction_->Delete(kvstore_->vertex_chandle, vertex);
+
+  if (vertex_del_status.ok()) {
+    spdlog::trace("rocksdb: Deleted (leaving edges) vertex with key {}", vertex);
+    return true;
+  }
+  spdlog::error("rocksdb: Failed to delete (leaving edges) vertex with key {}", vertex);
+  return false;
+}
+
 bool DiskStorage::DeleteVertexFromDisk(Transaction *transaction, std::string_view vertex_gid, std::string_view vertex) {
   /// TODO: (andi) This should be atomic delete.
   auto vertex_del_status = transaction->disk_transaction_->Delete(kvstore_->vertex_chandle, vertex);
@@ -1256,7 +1268,7 @@ bool DiskStorage::DeleteEdgeFromConnectivityIndex(Transaction *transaction, std:
 
     /// NOTE: this deletion has to come before writing, otherwise RocksDB thinks that all entries are deleted
     if (auto maybe_old_disk_key = utils::GetOldDiskKeyOrNull(vertex.delta); maybe_old_disk_key.has_value()) {
-      if (!DeleteVertexFromDisk(transaction, vertex.gid.ToString(), maybe_old_disk_key.value())) {
+      if (!DeleteVertexFromDiskLeavingEdges(transaction, vertex.gid.ToString(), maybe_old_disk_key.value())) {
         return StorageManipulationError{SerializationError{}};
       }
     }
